@@ -4,6 +4,8 @@ let groupsContainer = document.getElementById('groups-id');
 let usersContainer = document.getElementById('users-id');
 let profileContainer = document.getElementById('profile-id');
 
+let groupCreateInput = document.getElementById('create-group-input');
+let groupCreateSubmit = document.getElementById('create-group-submit');
 let chatMessageInput = document.getElementById('chat-message-input');
 let chatMessageSubmit = document.getElementById('chat-message-submit');
 let chatWindow = document.getElementById('chat-window');
@@ -61,6 +63,12 @@ chatMessageInput.onkeyup = function (e) {
     }
 }
 
+groupCreateInput.onkeyup = function (e) {
+    if (e.keyCode === 13) {
+        groupCreateSubmit.click();
+    }
+}
+
 chatMessageSubmit.onclick = function (e) {
     chatSocket.send(JSON.stringify({
         'message': chatMessageInput.value
@@ -68,6 +76,10 @@ chatMessageSubmit.onclick = function (e) {
     chatMessageInput.value = '';
 };
 
+groupCreateSubmit.onclick = function (e) {
+    addGroup(groupCreateInput.value);
+    groupCreateInput.value = '';
+}
 
 function showMessage(message) {
     let div = document.createElement('div');
@@ -150,14 +162,46 @@ function updateGroups() {
             for (let group in data) {
                 let div = document.createElement('div');
                 div.className = 'group';
-                div.innerHTML = `${data[group].name}`;
+                let groupName = document.createElement('div');
+                groupName.id = `group-name-${data[group].id}`;
+                groupName.innerHTML = `${data[group].name}`;
+                groupName.className = 'group-name';
+                let btnOK = document.createElement('button');
+                btnOK.id = `group-okbt-${data[group].id}`;
+                btnOK.innerHTML = 'ОК';
+                btnOK.onclick = function (ev) {
+                    const groupId = ev.target.id.split('-')[2];
+                    let groupName = document.getElementById('group-name-' + groupId);
+                    let groupInput = document.getElementById('group-edit-' + groupId);
+                    let bntEdit = document.getElementById('group-editbt-' + groupId);
+                    let btOk = document.getElementById('group-okbt-' + groupId);
+                    groupName.hidden = false;
+                    groupInput.hidden = true;
+                    bntEdit.hidden = false;
+                    btOk.hidden = true;
+                    editGroup(groupId, groupInput.value);
+                }
+                btnOK.hidden = true;
                 let btnEdit = document.createElement('button');
                 btnEdit.className = 'group-edit-button';
-                btnEdit.id = `group-edit-${data[group].id}`
+                btnEdit.id = `group-editbt-${data[group].id}`
                 btnEdit.innerHTML = 'Редактировать';
                 btnEdit.onclick = function (ev) {
-                    editGroup(ev.target.id.split('-')[2]);
+                    const groupId = ev.target.id.split('-')[2];
+                    let groupName = document.getElementById('group-name-' + groupId);
+                    let groupInput = document.getElementById('group-edit-' + groupId);
+                    let bntEdit = document.getElementById('group-editbt-' + groupId);
+                    let btOk = document.getElementById('group-okbt-' + groupId);
+                    groupName.hidden = true;
+                    groupInput.hidden = false;
+                    groupInput.value = groupName.innerHTML;
+                    bntEdit.hidden = true;
+                    btOk.hidden = false;
                 }
+                let groupEdit = document.createElement('input');
+                groupEdit.type = 'text';
+                groupEdit.hidden = true;
+                groupEdit.id = `group-edit-${data[group].id}`;
                 let btnDelete = document.createElement('button');
                 btnDelete.className = 'group-delete-button';
                 btnDelete.id = `group-delete-${data[group].id}`
@@ -165,7 +209,10 @@ function updateGroups() {
                 btnDelete.onclick = function (ev) {
                     deleteGroup(ev.target.id.split('-')[2]);
                 }
+                div.append(groupName);
+                div.append(groupEdit);
                 div.append(btnDelete);
+                div.append(btnOK);
                 div.append(btnEdit);
 
                 groupsWindow.append(div);
@@ -177,11 +224,35 @@ function updateGroups() {
 }
 
 function addGroup(groupName) {
-
+    if (groupName != "") {
+        console.log(JSON.stringify({name: groupName}))
+        fetch('http://localhost:8000/chat/api/rooms/', {
+            method: 'POST',
+            body: JSON.stringify({name: groupName}),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
 }
 
-function editGroup(groupId) {
-
+function editGroup(groupId, groupName) {
+    fetch(`http://localhost:8000/chat/api/rooms/${groupId}/`, {
+        method: 'PUT',
+        body: JSON.stringify({name: groupName}),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then((response) => {
+            console.log(response);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
 }
 
 function deleteGroup(groupId) {

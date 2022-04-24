@@ -11,22 +11,22 @@ main {
     height: 345px;
 }
 
-#send-message-panel {
+#send-message-panel, #create-group-panel {
     display: flex;
     margin: 5px;
 }
 
-#chat-message-input {
+#chat-message-input, #create-group-input {
     width: 70%;
     border-radius: 5px;
     margin-right: 5px;
 }
-#chat-message-submit {
+#chat-message-submit, #create-group-submit {
     width: 30%;
     border-radius: 5px;
 }
 
-#chat-window {
+#chat-window, #groups-window {
     height: 300px;
     border: 1px black solid;
     padding: 5px;
@@ -36,6 +36,10 @@ main {
     justify-content: flex-end;
     background-color: aqua;
     border-radius: 10px;
+}
+
+div #groups-window {
+    justify-content: flex-start;
 }
 
 .message {
@@ -65,8 +69,12 @@ main {
     border: 1px solid gray;
     margin: 3px;
     padding: 5px;
+    border-radius: 5px;
 }
 
+.group-name {
+    float: left;
+}
 .group-edit-button, .group-delete-button {
     float: right;
 }
