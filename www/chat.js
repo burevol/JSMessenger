@@ -4,14 +4,22 @@ let groupsContainer = document.getElementById('groups-id');
 let usersContainer = document.getElementById('users-id');
 let profileContainer = document.getElementById('profile-id');
 
+let profileAvatarInput = document.getElementById('avatar-file-input');
+let profileAvatarSubmit = document.getElementById('avatar-file-submit');
+let profileAvatar = document.getElementById('avatar-id');
+let profileInput = document.getElementById('create-profile-input');
+let profileSubmit = document.getElementById('create-profile-submit');
+
 let groupCreateInput = document.getElementById('create-group-input');
 let groupCreateSubmit = document.getElementById('create-group-submit');
+
 let chatMessageInput = document.getElementById('chat-message-input');
 let chatMessageSubmit = document.getElementById('chat-message-submit');
+
 let chatWindow = document.getElementById('chat-window');
 let groupsWindow = document.getElementById('groups-window')
 
-//Кнопки
+//Кнопки переключения разделов
 let groupButton = document.getElementById('group-button');
 let userButton = document.getElementById('user-button');
 let chatButton = document.getElementById('chat-button');
@@ -50,12 +58,23 @@ profileButton.onclick = function (e) {
 
 
 const roomName = 'lobby';
+let userId = null;
 
 groupsContainer.hidden = true;
 chatContainer.hidden = false;
 usersContainer.hidden = true;
 profileContainer.hidden = true;
 chatMessageInput.focus();
+
+profileInput.onkeyup = function (e) {
+    if (e.keyCode === 13) {
+        profileSubmit.click();
+    }
+}
+
+profileSubmit.onclick = function (e) {
+    doLogin();
+}
 
 chatMessageInput.onkeyup = function (e) {
     if (e.keyCode === 13) {
@@ -79,6 +98,25 @@ chatMessageSubmit.onclick = function (e) {
 groupCreateSubmit.onclick = function (e) {
     addGroup(groupCreateInput.value);
     groupCreateInput.value = '';
+}
+
+profileAvatarSubmit.onclick = function (e) {
+    if (userId != null) {
+        let data = new FormData();
+
+        data.append('avatar', profileAvatarInput.files[0]);
+        fetch(`http://localhost:8000/chat/api/profiles/${userId}/`, {
+            method: 'PUT',
+            body: data
+        }).then(response => {
+            return response.json();
+        }).then(data => {
+            updateAvatar();
+        }).catch((error) => {
+            console.error('Error:', error);
+        });
+
+    }
 }
 
 function showMessage(message) {
@@ -269,3 +307,73 @@ function deleteGroup(groupId) {
             console.log(error);
         });
 }
+
+function updateAvatar() {
+    if (userId != null) {
+        fetch(`http://localhost:8000/chat/api/profiles/${userId}/`, {
+            method: 'GET',
+            headers: {
+                accept: 'application/json',
+            },
+        })
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                console.log(data);
+
+                let avatarImg = document.createElement('img');
+                avatarImg.src = data.avatar;
+                avatarImg.alt = 'Аватар';
+                avatarImg.id = 'avatar-img';
+                profileAvatar.innerHTML = '';
+                profileAvatar.append(avatarImg);
+
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+}
+
+function doLogin() {
+    fetch(`http://localhost:8000/chat/api/profiles/?username=${profileInput.value}`, {
+        method: 'GET',
+        headers: {
+            accept: 'application/json',
+        },
+    })
+        .then((response) => {
+            return response.json();
+        })
+        .then((data) => {
+                console.log(data.length)
+                if (data.length === 0) {
+                    fetch('http://localhost:8000/chat/api/profiles/', {
+                        method: 'POST',
+                        body: JSON.stringify({username: profileInput.value}),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then((response) => {
+                            return response.json();
+                        })
+                        .then((data) => {
+                            userId = data.id;
+                            updateAvatar();
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                } else {
+                    userId = data[0].id;
+                    updateAvatar();
+                }
+            }
+        )
+        .catch(() => {
+            console.log('error');
+        });
+}
+

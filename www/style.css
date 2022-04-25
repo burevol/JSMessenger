@@ -11,22 +11,23 @@ main {
     height: 345px;
 }
 
-#send-message-panel, #create-group-panel {
+#send-message-panel, #create-group-panel, #create-profile-panel, #profile-panel {
     display: flex;
     margin: 5px;
 }
 
-#chat-message-input, #create-group-input {
+#chat-message-input, #create-group-input, #create-profile-input {
     width: 70%;
     border-radius: 5px;
     margin-right: 5px;
 }
-#chat-message-submit, #create-group-submit {
+
+#chat-message-submit, #create-group-submit, #create-profile-submit {
     width: 30%;
     border-radius: 5px;
 }
 
-#chat-window, #groups-window {
+#chat-window, #groups-window, #profile-window{
     height: 300px;
     border: 1px black solid;
     padding: 5px;
@@ -77,4 +78,10 @@ div #groups-window {
 }
 .group-edit-button, .group-delete-button {
     float: right;
+}
+
+#avatar-img {
+    padding: 10px;
+    max-width:90%;
+    height:auto;
 }

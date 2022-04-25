@@ -30,8 +30,8 @@ class Message(models.Model):
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    username = models.CharField(max_length=100, blank=True)
     avatar = models.ImageField(default='default.jpg', upload_to='profile_images')
 
     def __str__(self):
-        return self.user.username
+        return self.username
