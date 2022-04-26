@@ -54,6 +54,18 @@ div #groups-window {
     background-color: lightgreen;
     word-break: break-all;
 }
+.main-message {
+    width: fit-content;
+    border: 1px gray solid;
+    border-radius: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    background-color: lightgray;
+    word-break: break-all;
+    align-self: flex-end;
+}
 
 .buttons {
     margin-left: 5px;
@@ -76,7 +88,7 @@ div #groups-window {
 .group-name {
     float: left;
 }
-.group-edit-button, .group-delete-button {
+.group-edit-button, .group-delete-button, .group-connect-button {
     float: right;
 }
 

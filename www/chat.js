@@ -23,7 +23,9 @@ let groupsWindow = document.getElementById('groups-window')
 let groupButton = document.getElementById('group-button');
 let userButton = document.getElementById('user-button');
 let chatButton = document.getElementById('chat-button');
-let profileButton = document.getElementById('profile-button')
+let profileButton = document.getElementById('profile-button');
+
+let currentGroupDiv = document.getElementById('current-group');
 
 groupButton.onclick = function (e) {
     groupsContainer.hidden = false;
@@ -90,6 +92,7 @@ groupCreateInput.onkeyup = function (e) {
 
 chatMessageSubmit.onclick = function (e) {
     chatSocket.send(JSON.stringify({
+        'command': 'message',
         'message': chatMessageInput.value
     }));
     chatMessageInput.value = '';
@@ -119,9 +122,13 @@ profileAvatarSubmit.onclick = function (e) {
     }
 }
 
-function showMessage(message) {
+function showMessage(message, mainMessage=false) {
     let div = document.createElement('div');
-    div.className = "message";
+    if (mainMessage) {
+        div.className = 'main-message';
+    } else {
+        div.className = "message";
+    }
     div.innerHTML = message;
     chatWindow.append(div);
 }
@@ -129,9 +136,13 @@ function showMessage(message) {
 let chatSocket = null;
 
 function connect() {
-    chatSocket = new WebSocket("ws://127.0.0.1:8000/ws/chat/" + roomName + "/");
+    chatSocket = new WebSocket("ws://127.0.0.1:8000/ws/chat/");
 
     chatSocket.onopen = function (e) {
+        chatSocket.send(JSON.stringify({
+            'command': 'auth',
+            'message': userId
+        }));
         console.log('Successfully connected to the WebSocket.')
     }
 
@@ -147,7 +158,7 @@ function connect() {
     chatSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
         console.log(data);
-
+        let mainMessage = false;
         switch (data.type) {
             case "user_list":
                 for (let i = 0; i < data.users.length; i++) {
@@ -156,11 +167,9 @@ function connect() {
                 break;
             case "user_join":
                 showMessage(`${data.user} вошел в комнату.`);
-                onlineUsersSelectorAdd(data.user);
                 break;
             case "user_leave":
                 showMessage(`${data.user} покинул комнату.`);
-                onlineUsersSelectorRemove(data.user);
                 break;
             case 'private_message':
                 showMessage(`PM от ${data.user}: ${data.message}`);
@@ -169,7 +178,12 @@ function connect() {
                 showMessage(`PM ${data.target}: ${data.message}`);
                 break;
             case "chat_message":
-                showMessage(`${data.user}: ${data.message}`);
+                if (data.user == profileInput.value) {
+                    mainMessage = true;
+                } else {
+                    mainMessage = false
+                }
+                showMessage(`${data.user}: ${data.message}`, mainMessage);
                 break;
             default:
                 console.error("Unknown message type!");
@@ -182,8 +196,6 @@ function connect() {
         chatSocket.close();
     }
 }
-
-//connect();
 
 function updateGroups() {
     fetch('http://localhost:8000/chat/api/rooms/', {
@@ -204,6 +216,16 @@ function updateGroups() {
                 groupName.id = `group-name-${data[group].id}`;
                 groupName.innerHTML = `${data[group].name}`;
                 groupName.className = 'group-name';
+                let btnConnect = document.createElement('button');
+                btnConnect.innerHTML = 'Connect';
+                btnConnect.className = 'group-connect-button'
+                btnConnect.onclick = function (ev) {
+                    chatSocket.send(JSON.stringify({
+                        'command': 'enter_room',
+                        'message': groupName.innerHTML
+                    }));
+                    currentGroupDiv.innerHTML = `Текущая группа: ${groupName.innerHTML}`
+                }
                 let btnOK = document.createElement('button');
                 btnOK.id = `group-okbt-${data[group].id}`;
                 btnOK.innerHTML = 'ОК';
@@ -223,7 +245,7 @@ function updateGroups() {
                 let btnEdit = document.createElement('button');
                 btnEdit.className = 'group-edit-button';
                 btnEdit.id = `group-editbt-${data[group].id}`
-                btnEdit.innerHTML = 'Редактировать';
+                btnEdit.innerHTML = 'Edit';
                 btnEdit.onclick = function (ev) {
                     const groupId = ev.target.id.split('-')[2];
                     let groupName = document.getElementById('group-name-' + groupId);
@@ -243,15 +265,17 @@ function updateGroups() {
                 let btnDelete = document.createElement('button');
                 btnDelete.className = 'group-delete-button';
                 btnDelete.id = `group-delete-${data[group].id}`
-                btnDelete.innerHTML = 'Удалить';
+                btnDelete.innerHTML = 'Delete';
                 btnDelete.onclick = function (ev) {
                     deleteGroup(ev.target.id.split('-')[2]);
                 }
                 div.append(groupName);
                 div.append(groupEdit);
                 div.append(btnDelete);
+
                 div.append(btnOK);
                 div.append(btnEdit);
+                div.append(btnConnect);
 
                 groupsWindow.append(div);
             }
@@ -362,6 +386,7 @@ function doLogin() {
                         .then((data) => {
                             userId = data.id;
                             updateAvatar();
+                            connect();
                         })
                         .catch((error) => {
                             console.log(error);
@@ -369,11 +394,13 @@ function doLogin() {
                 } else {
                     userId = data[0].id;
                     updateAvatar();
+                    connect();
                 }
             }
         )
         .catch(() => {
             console.log('error');
         });
+
 }
 
