@@ -27,7 +27,7 @@ main {
     border-radius: 5px;
 }
 
-#chat-window, #groups-window, #profile-window{
+#chat-window, #groups-window, #profile-window, #users-window {
     height: 300px;
     border: 1px black solid;
     padding: 5px;
@@ -37,9 +37,10 @@ main {
     justify-content: flex-end;
     background-color: aqua;
     border-radius: 10px;
+    overflow: hidden;
 }
 
-div #groups-window {
+div #groups-window, #users-window {
     justify-content: flex-start;
 }
 
@@ -88,7 +89,7 @@ div #groups-window {
 .group-name {
     float: left;
 }
-.group-edit-button, .group-delete-button, .group-connect-button {
+.group-edit-button, .group-delete-button, .group-connect-button, .user-connect-button {
     float: right;
 }
 

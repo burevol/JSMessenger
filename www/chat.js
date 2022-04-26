@@ -17,7 +17,9 @@ let chatMessageInput = document.getElementById('chat-message-input');
 let chatMessageSubmit = document.getElementById('chat-message-submit');
 
 let chatWindow = document.getElementById('chat-window');
-let groupsWindow = document.getElementById('groups-window')
+let groupsWindow = document.getElementById('groups-window');
+
+let usersWindow = document.getElementById('users-window');
 
 //Кнопки переключения разделов
 let groupButton = document.getElementById('group-button');
@@ -40,6 +42,7 @@ userButton.onclick = function (e) {
     chatContainer.hidden = true;
     usersContainer.hidden = false;
     profileContainer.hidden = true;
+    updateUsers();
 }
 
 chatButton.onclick = function (e) {
@@ -122,7 +125,7 @@ profileAvatarSubmit.onclick = function (e) {
     }
 }
 
-function showMessage(message, mainMessage=false) {
+function showMessage(message, mainMessage = false) {
     let div = document.createElement('div');
     if (mainMessage) {
         div.className = 'main-message';
@@ -160,22 +163,17 @@ function connect() {
         console.log(data);
         let mainMessage = false;
         switch (data.type) {
-            case "user_list":
-                for (let i = 0; i < data.users.length; i++) {
-                    onlineUsersSelectorAdd(data.users[i]);
-                }
+            case "update_profiles":
+                updateUsers();
+                break;
+            case "update_rooms":
+                updateGroups();
                 break;
             case "user_join":
                 showMessage(`${data.user} вошел в комнату.`);
                 break;
             case "user_leave":
                 showMessage(`${data.user} покинул комнату.`);
-                break;
-            case 'private_message':
-                showMessage(`PM от ${data.user}: ${data.message}`);
-                break;
-            case 'private_message_delivered':
-                showMessage(`PM ${data.target}: ${data.message}`);
                 break;
             case "chat_message":
                 if (data.user == profileInput.value) {
@@ -197,7 +195,50 @@ function connect() {
     }
 }
 
+function updateUsers() {
+    fetch('http://localhost:8000/chat/api/profiles/', {
+        method: 'GET',
+        headers: {
+            accept: 'application/json',
+        },
+    })
+        .then((response) => {
+            return response.json();
+        })
+        .then((data) => {
+            usersWindow.innerHTML = '';
+            for (let user in data) {
+                let div = document.createElement('div');
+                div.className = 'group';
+                let userName = document.createElement('div');
+                userName.id = `user-name-${data[user].id}`;
+                userName.innerHTML = `${data[user].username}`;
+                userName.className = 'group-name';
+                let btnConnect = document.createElement('button');
+                btnConnect.innerHTML = 'Connect';
+                btnConnect.className = 'user-connect-button'
+                btnConnect.onclick = function (ev) {
+                    chatSocket.send(JSON.stringify({
+                        'command': 'enter_private',
+                        'message': userName.innerHTML
+                    }))
+                    currentGroupDiv.innerHTML = `Текущий приватный чат: ${userName.innerHTML}`;
+
+                }
+                div.append(userName);
+                div.append(btnConnect);
+                usersWindow.append(div);
+
+            }
+        })
+        .catch(() => {
+            console.log('error');
+
+        });
+}
+
 function updateGroups() {
+    console.log('ОБновляем список групп')
     fetch('http://localhost:8000/chat/api/rooms/', {
         method: 'GET',
         headers: {

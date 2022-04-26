@@ -12,43 +12,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
         super().__init__(args, kwargs)
         self.room_name = None
         self.room_group_name = None
-        # self.room = None
         self.username = None
-        # self.user_inbox = None
+        self.user_inbox = None
 
     async def connect(self):
-        # self.user = self.scope['user']
-        # self.user_inbox = f'inbox_{self.user.username}'
-        #
-        # await self.channel_layer.group_add(
-        #     self.room_group_name,
-        #     self.channel_name
-        # )
-        logging.info('Connected successfully')
+
         await self.accept()
-
-        # user_list = await self.get_user_list()
-        # await self.send(json.dumps({
-        #     'type': 'user_list',
-        #     'users': user_list
-        # }))
-
-        # await self.channel_layer.group_add(
-        #     self.user_inbox,
-        #     self.channel_name
-        # )
-        # await self.channel_layer.group_send(
-        #     self.room_group_name,
-        #     {
-        #         'type': 'user_join',
-        #         'user': self.user.username
-        #     })
 
     async def disconnect(self, code):
         logging.info('Disconnect')
         if self.room_group_name is not None:
             await self.channel_layer.group_discard(
                 self.room_group_name,
+                self.channel_name
+            )
+            await self.channel_layer.group_discard(
+                'all-users',
                 self.channel_name
             )
             await self.channel_layer.group_send(
@@ -65,10 +44,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
         command = text_data_json['command']
 
         if command == 'auth':
-            logging.info(f'User {message} authenticated')
-            self.username = await self.get_user_name(message)
+            self.username = await self.get_user_name(message)  # Проверить на логичность
+            self.user_inbox = f'inbox_{self.username}'
+            await self.channel_layer.group_add(
+                self.user_inbox,
+                self.channel_name
+            )
+            await self.channel_layer.group_add(
+                'all-users',
+                self.channel_name
+            )
+
         elif command == 'message':
-            logging.info(f'Message {message} received')
             if self.room_group_name is not None:
                 await self.channel_layer.group_send(
                     self.room_group_name,
@@ -78,20 +65,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         'message': message
                     }
                 )
+        elif command == 'enter_private':
+            self.leave_room()
+            self.room_group_name = f'inbox_{message}'
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+
         elif command == 'enter_room':
-            logging.info(f'Enter {message} room')
-            if self.room_group_name is not None:
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {
-                        'type': 'user_leave',
-                        'user': self.username
-                    }
-                )
-                await self.channel_layer.group_discard(
-                    self.room_group_name,
-                    self.channel_name
-                )
+            self.leave_room()
             self.room_name = message
             self.room_group_name = f'chat_{message}'
             await self.channel_layer.group_add(
@@ -106,26 +89,28 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'user': self.username
                 })
 
-            # if message.startswith('/pm'):
-            #     split = message.split(' ', 2)
-            #     target = split[1]
-            #     target_msg = split[2]
-            #     await self.channel_layer.group_send(
-            #         f'inbox_{target}',
-            #         {
-            #             'type': 'private_message',
-            #             'user': self.user.username,
-            #             'message': target_msg
-            #         }
-            #     )
-            #     await self.send(json.dumps({
-            #         'type': 'private_message_delivered',
-            #         'target': target,
-            #         'message': target_msg
-            #     }))
-            #     return
+    async def leave_room(self):
+        if self.room_group_name is not None:
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'user_leave',
+                    'user': self.username
+                }
+            )
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
+            self.room_group_name = None
 
     async def chat_message(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def update_rooms(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def update_profiles(self, event):
         await self.send(text_data=json.dumps(event))
 
     async def user_join(self, event):
@@ -133,16 +118,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def user_leave(self, event):
         await self.send(text_data=json.dumps(event))
-
-    async def private_message(self, event):
-        await self.send(text_data=json.dumps(event))
-
-    async def private_message_delivered(self, event):
-        await self.send(text_data=json.dumps(event))
-
-    @database_sync_to_async
-    def get_room(self):
-        return Room.objects.get(name=self.room_name)
 
     @database_sync_to_async
     def get_user_list(self):
