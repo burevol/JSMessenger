@@ -28,48 +28,34 @@ let chatButton = document.getElementById('chat-button');
 let profileButton = document.getElementById('profile-button');
 
 let currentGroupDiv = document.getElementById('current-group');
+let serverAddress = document.getElementById('server-address');
+serverAddress.value = '127.0.0.1:8000'
+
+serverAddress.onclick = function (e) {
+    doLogin();
+}
 
 groupButton.onclick = function (e) {
-    groupsContainer.hidden = false;
-    chatContainer.hidden = true;
-    usersContainer.hidden = true;
-    profileContainer.hidden = true;
-    updateGroups();
+    setPanelVisible("groups")
 }
 
 userButton.onclick = function (e) {
-    groupsContainer.hidden = true;
-    chatContainer.hidden = true;
-    usersContainer.hidden = false;
-    profileContainer.hidden = true;
-    updateUsers();
+    setPanelVisible('users')
 }
 
 chatButton.onclick = function (e) {
-    groupsContainer.hidden = true;
-    chatContainer.hidden = false;
-    usersContainer.hidden = true;
-    profileContainer.hidden = true;
-
-    chatMessageInput.focus();
+    setPanelVisible('chat')
 }
 
 profileButton.onclick = function (e) {
-    groupsContainer.hidden = true;
-    chatContainer.hidden = true;
-    usersContainer.hidden = true;
-    profileContainer.hidden = false;
+    setPanelVisible('profile')
 }
 
 
 const roomName = 'lobby';
 let userId = null;
 
-groupsContainer.hidden = true;
-chatContainer.hidden = false;
-usersContainer.hidden = true;
-profileContainer.hidden = true;
-chatMessageInput.focus();
+setPanelVisible('profile')
 
 profileInput.onkeyup = function (e) {
     if (e.keyCode === 13) {
@@ -111,7 +97,7 @@ profileAvatarSubmit.onclick = function (e) {
         let data = new FormData();
 
         data.append('avatar', profileAvatarInput.files[0]);
-        fetch(`http://localhost:8000/chat/api/profiles/${userId}/`, {
+        fetch(`http://${serverAddress.value}/chat/api/profiles/${userId}/`, {
             method: 'PUT',
             body: data
         }).then(response => {
@@ -139,7 +125,7 @@ function showMessage(message, mainMessage = false) {
 let chatSocket = null;
 
 function connect() {
-    chatSocket = new WebSocket("ws://127.0.0.1:8000/ws/chat/");
+    chatSocket = new WebSocket(`ws://${serverAddress.value}/ws/chat/`);
 
     chatSocket.onopen = function (e) {
         chatSocket.send(JSON.stringify({
@@ -196,7 +182,7 @@ function connect() {
 }
 
 function updateUsers() {
-    fetch('http://localhost:8000/chat/api/profiles/', {
+    fetch(`http://${serverAddress.value}/chat/api/profiles/`, {
         method: 'GET',
         headers: {
             accept: 'application/json',
@@ -216,7 +202,7 @@ function updateUsers() {
                 userName.className = 'group-name';
                 let btnConnect = document.createElement('button');
                 btnConnect.innerHTML = 'Connect';
-                btnConnect.className = 'user-connect-button'
+                btnConnect.className = 'user-connect-button buttons'
                 btnConnect.onclick = function (ev) {
                     chatSocket.send(JSON.stringify({
                         'command': 'enter_private',
@@ -239,7 +225,7 @@ function updateUsers() {
 
 function updateGroups() {
     console.log('ОБновляем список групп')
-    fetch('http://localhost:8000/chat/api/rooms/', {
+    fetch(`http://${serverAddress.value}/chat/api/rooms/`, {
         method: 'GET',
         headers: {
             accept: 'application/json',
@@ -259,7 +245,7 @@ function updateGroups() {
                 groupName.className = 'group-name';
                 let btnConnect = document.createElement('button');
                 btnConnect.innerHTML = 'Connect';
-                btnConnect.className = 'group-connect-button'
+                btnConnect.className = 'group-connect-button buttons'
                 btnConnect.onclick = function (ev) {
                     chatSocket.send(JSON.stringify({
                         'command': 'enter_room',
@@ -269,6 +255,7 @@ function updateGroups() {
                 }
                 let btnOK = document.createElement('button');
                 btnOK.id = `group-okbt-${data[group].id}`;
+                btnOK.className = "buttons";
                 btnOK.innerHTML = 'ОК';
                 btnOK.onclick = function (ev) {
                     const groupId = ev.target.id.split('-')[2];
@@ -284,7 +271,7 @@ function updateGroups() {
                 }
                 btnOK.hidden = true;
                 let btnEdit = document.createElement('button');
-                btnEdit.className = 'group-edit-button';
+                btnEdit.className = 'group-edit-button buttons';
                 btnEdit.id = `group-editbt-${data[group].id}`
                 btnEdit.innerHTML = 'Edit';
                 btnEdit.onclick = function (ev) {
@@ -304,7 +291,7 @@ function updateGroups() {
                 groupEdit.hidden = true;
                 groupEdit.id = `group-edit-${data[group].id}`;
                 let btnDelete = document.createElement('button');
-                btnDelete.className = 'group-delete-button';
+                btnDelete.className = 'group-delete-button buttons';
                 btnDelete.id = `group-delete-${data[group].id}`
                 btnDelete.innerHTML = 'Delete';
                 btnDelete.onclick = function (ev) {
@@ -329,7 +316,7 @@ function updateGroups() {
 function addGroup(groupName) {
     if (groupName != "") {
         console.log(JSON.stringify({name: groupName}))
-        fetch('http://localhost:8000/chat/api/rooms/', {
+        fetch(`http://${serverAddress.value}/chat/api/rooms/`, {
             method: 'POST',
             body: JSON.stringify({name: groupName}),
             headers: {
@@ -343,7 +330,7 @@ function addGroup(groupName) {
 }
 
 function editGroup(groupId, groupName) {
-    fetch(`http://localhost:8000/chat/api/rooms/${groupId}/`, {
+    fetch(`http://${serverAddress.value}/chat/api/rooms/${groupId}/`, {
         method: 'PUT',
         body: JSON.stringify({name: groupName}),
         headers: {
@@ -359,7 +346,7 @@ function editGroup(groupId, groupName) {
 }
 
 function deleteGroup(groupId) {
-    fetch(`http://localhost:8000/chat/api/rooms/${groupId}`, {
+    fetch(`http://${serverAddress.value}/chat/api/rooms/${groupId}`, {
         method: 'DELETE',
         headers: {
             accept: 'application/json',
@@ -375,7 +362,7 @@ function deleteGroup(groupId) {
 
 function updateAvatar() {
     if (userId != null) {
-        fetch(`http://localhost:8000/chat/api/profiles/${userId}/`, {
+        fetch(`http://${serverAddress.value}/chat/api/profiles/${userId}/`, {
             method: 'GET',
             headers: {
                 accept: 'application/json',
@@ -402,7 +389,7 @@ function updateAvatar() {
 }
 
 function doLogin() {
-    fetch(`http://localhost:8000/chat/api/profiles/?username=${profileInput.value}`, {
+    fetch(`http://l${serverAddress.value}/chat/api/profiles/?username=${profileInput.value}`, {
         method: 'GET',
         headers: {
             accept: 'application/json',
@@ -414,7 +401,7 @@ function doLogin() {
         .then((data) => {
                 console.log(data.length)
                 if (data.length === 0) {
-                    fetch('http://localhost:8000/chat/api/profiles/', {
+                    fetch(`http://${serverAddress.value}/chat/api/profiles/`, {
                         method: 'POST',
                         body: JSON.stringify({username: profileInput.value}),
                         headers: {
@@ -445,3 +432,27 @@ function doLogin() {
 
 }
 
+function setPanelVisible(panel) {
+    groupsContainer.hidden = true;
+    chatContainer.hidden = true;
+    usersContainer.hidden = true;
+    profileContainer.hidden = true;
+
+    switch (panel) {
+        case "groups":
+            groupsContainer.hidden = false;
+            updateGroups();
+            break;
+        case "users":
+            usersContainer.hidden = false;
+            updateUsers();
+            break;
+        case "chat":
+            chatContainer.hidden = false;
+            chatMessageInput.focus();
+            break;
+        case "profile":
+            profileContainer.hidden = false;
+            break;
+    }
+}

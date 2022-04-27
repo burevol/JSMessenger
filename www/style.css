@@ -5,6 +5,8 @@ body {
 main {
     width: 300px;
     border: 1px solid gray;
+    border-radius: 5px;
+    box-shadow: 5px 5px 5px rgba(34, 60, 80, .6);
 }
 
 #groups-id, #users-id, #chat-id, #profile-id {
@@ -24,7 +26,6 @@ main {
 
 #chat-message-submit, #create-group-submit, #create-profile-submit {
     width: 30%;
-    border-radius: 5px;
 }
 
 #chat-window, #groups-window, #profile-window, #users-window {
@@ -72,6 +73,7 @@ div #groups-window, #users-window {
     margin-left: 5px;
     margin-right: 5px;
     margin-top: 3px;
+    border-radius: 5px;
 }
 
 #management-toolbar {
@@ -89,12 +91,22 @@ div #groups-window, #users-window {
 .group-name {
     float: left;
 }
+
 .group-edit-button, .group-delete-button, .group-connect-button, .user-connect-button {
     float: right;
 }
 
+#avatar-id {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: aquamarine;
+    border-radius: 5px;
+}
+
 #avatar-img {
-    padding: 10px;
-    max-width:90%;
-    height:auto;
+    padding: 5px;
+    margin: 10px;
+    width: auto;
+    height: 230px;
 }

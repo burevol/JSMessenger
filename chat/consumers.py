@@ -3,20 +3,18 @@ import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
-from .models import Room, Profile
+from .models import Profile
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(args, kwargs)
-        self.room_name = None
         self.room_group_name = None
         self.username = None
         self.user_inbox = None
 
     async def connect(self):
-
         await self.accept()
 
     async def disconnect(self, code):
@@ -44,7 +42,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         command = text_data_json['command']
 
         if command == 'auth':
-            self.username = await self.get_user_name(message)  # Проверить на логичность
+            self.username = await self.get_user_name(message)
             self.user_inbox = f'inbox_{self.username}'
             await self.channel_layer.group_add(
                 self.user_inbox,
@@ -75,7 +73,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         elif command == 'enter_room':
             self.leave_room()
-            self.room_name = message
             self.room_group_name = f'chat_{message}'
             await self.channel_layer.group_add(
                 self.room_group_name,
@@ -118,18 +115,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def user_leave(self, event):
         await self.send(text_data=json.dumps(event))
-
-    @database_sync_to_async
-    def get_user_list(self):
-        return [user.username for user in self.room.online.all()]
-
-    @database_sync_to_async
-    def add_user_to_room(self):
-        self.room.online.add(self.user)
-
-    @database_sync_to_async
-    def remove_user_from_room(self):
-        self.room.online.remove(self.user)
 
     @database_sync_to_async
     def get_user_name(self, user_id):
