@@ -15,7 +15,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.user_inbox = None
 
     async def connect(self):
-        await self.accept()
+        if self.scope['user'].is_authenticated:
+            await self.accept()
+            self.username = self.scope['user'].first_name
+            self.user_inbox = f'inbox_{self.scope["user"].first_name}'
+            await self.channel_layer.group_add(
+                self.user_inbox,
+                self.channel_name
+            )
+            await self.channel_layer.group_add(
+                'all-users',
+                self.channel_name
+            )
+        else:
+            await self.close(code=401)
 
     async def disconnect(self, code):
         logging.info('Disconnect')
@@ -41,19 +54,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = text_data_json['message']
         command = text_data_json['command']
 
-        if command == 'auth':
-            self.username = await self.get_user_name(message)
-            self.user_inbox = f'inbox_{self.username}'
-            await self.channel_layer.group_add(
-                self.user_inbox,
-                self.channel_name
-            )
-            await self.channel_layer.group_add(
-                'all-users',
-                self.channel_name
-            )
-
-        elif command == 'message':
+        if command == 'message':
             if self.room_group_name is not None:
                 await self.channel_layer.group_send(
                     self.room_group_name,
@@ -64,7 +65,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     }
                 )
         elif command == 'enter_private':
-            self.leave_room()
+            await self.leave_room()
             self.room_group_name = f'inbox_{message}'
             await self.channel_layer.group_add(
                 self.room_group_name,
@@ -72,7 +73,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
         elif command == 'enter_room':
-            self.leave_room()
+            await self.leave_room()
             self.room_group_name = f'chat_{message}'
             await self.channel_layer.group_add(
                 self.room_group_name,
@@ -85,6 +86,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'type': 'user_join',
                     'user': self.username
                 })
+        elif command == 'change_username':
+            await self.channel_layer.group_discard(
+                self.user_inbox,
+                self.channel_name
+            )
+            self.username = message
+            self.user_inbox = f'inbox_{self.username}'
+            await self.channel_layer.group_add(
+                self.user_inbox,
+                self.channel_name
+            )
 
     async def leave_room(self):
         if self.room_group_name is not None:

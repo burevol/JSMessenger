@@ -38,18 +38,33 @@
     <div id="profile-id">
         <div id="profile-window">
             <div id="avatar-id"></div>
-            <div id="connect-server-panel">
-                <input id="server-address" type="text">
-                <input id="server-address-submit" type="button" class="buttons" value="Подкл">
-            </div>
             <div id="profile-panel">
                 <input type="file" id="avatar-file-input"/>
                 <button type="submit" id="avatar-file-submit" class="buttons">Upload</button>
             </div>
-        </div>
-        <div id="create-profile-panel">
-            <input id="create-profile-input" type="text">
-            <input id="create-profile-submit" type="button" class="buttons" value="Подключиться">
+            <div id="connect-server-panel">
+                <label for="server-address">Адрес сервера</label>
+                <input id="server-address" type="text">
+            </div>
+            <div id="profile-mode">
+                <button class="small-buttons" id="login-mode">Логин</button>
+                <button class="small-buttons" id="change-name-mode">Сменить имя</button>
+            </div>
+            <div id="login-register-panel">
+                <div id="input-login">
+                    <label for="login-input">Логин</label>
+                    <input id="login-input" type="text">
+                </div>
+                <div id="username-login">
+                    <label for="username-input">Имя</label>
+                    <input id="username-input" type="text">
+                </div>
+                <div id="password-login">
+                    <label for="password-input">Пароль</label>
+                    <input id="password-input" type="password">
+                </div>
+                <button class="small-buttons" id="accept-login-button">Применить</button>
+            </div>
         </div>
     </div>
 </main>

@@ -75,6 +75,12 @@ div #groups-window, #users-window {
     margin-top: 3px;
     border-radius: 5px;
 }
+.small-buttons {
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-top: 3px;
+    border-radius: 5px;
+}
 
 #management-toolbar {
     display: flex;
@@ -108,5 +114,5 @@ div #groups-window, #users-window {
     padding: 5px;
     margin: 10px;
     width: auto;
-    height: 230px;
+    height: 120px;
 }

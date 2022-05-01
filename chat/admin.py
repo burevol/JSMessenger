@@ -1,7 +1,6 @@
 from django.contrib import admin
 
-from .models import Room, Message, Profile
+from .models import Room, Profile
 
 admin.site.register(Room)
-admin.site.register(Message)
 admin.site.register(Profile)
