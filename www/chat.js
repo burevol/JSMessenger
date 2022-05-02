@@ -4,19 +4,22 @@ let groupsContainer = document.getElementById('groups-id');
 let usersContainer = document.getElementById('users-id');
 let profileContainer = document.getElementById('profile-id');
 
+//Блок аватара
 let profileAvatarSubmit = document.getElementById('avatar-file-submit');
 let profileAvatar = document.getElementById('avatar-id');
 let profileAvatarInput = document.getElementById('avatar-file-input');
 
+//Создание группы
 let groupCreateInput = document.getElementById('create-group-input');
 let groupCreateSubmit = document.getElementById('create-group-submit');
 
+//Отправка сообщений
 let chatMessageInput = document.getElementById('chat-message-input');
 let chatMessageSubmit = document.getElementById('chat-message-submit');
 
+//Окна внутри панелей
 let chatWindow = document.getElementById('chat-window');
 let groupsWindow = document.getElementById('groups-window');
-
 let usersWindow = document.getElementById('users-window');
 
 //Кнопки переключения разделов
@@ -25,16 +28,22 @@ let userButton = document.getElementById('user-button');
 let chatButton = document.getElementById('chat-button');
 let profileButton = document.getElementById('profile-button');
 
+//Div с текущей группой
 let currentGroupDiv = document.getElementById('current-group');
+
+//Адрес сервера
 let serverAddress = document.getElementById('server-address');
+
 
 let buttonLoginMode = document.getElementById('login-mode');
 let changeNameMode = document.getElementById('change-name-mode');
 
+//divы для полей логин/пароль/имя пользователя
 let divInputLogin = document.getElementById('input-login');
 let divInputUsername = document.getElementById('username-login');
 let divInputPassword = document.getElementById('password-login');
 
+//Поля для авторизации
 let inputLogin = document.getElementById('login-input');
 let inputPassword = document.getElementById('password-input');
 let inputUsername = document.getElementById('username-input');

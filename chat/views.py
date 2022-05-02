@@ -14,7 +14,7 @@ class RoomViewSet(viewsets.ModelViewSet):
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    #permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
@@ -22,7 +22,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User
+    permission_classes = [IsAuthenticated]
+    model = User
     queryset = User.objects.all()
     serializer_class = UserSerializer
 

@@ -1,5 +1,4 @@
 import json
-import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
@@ -15,6 +14,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.user_inbox = None
 
     async def connect(self):
+        """Connect user to consumer. Check authentication, create private group and add to broadcast group"""
         if self.scope['user'].is_authenticated:
             await self.accept()
             self.username = self.scope['user'].first_name
@@ -31,7 +31,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close(code=401)
 
     async def disconnect(self, code):
-        logging.info('Disconnect')
+        """Remove user from private group and broadcast group, send to group message 'user_leave'"""
         if self.room_group_name is not None:
             await self.channel_layer.group_discard(
                 self.room_group_name,
@@ -50,6 +50,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
     async def receive(self, text_data=None, bytes_data=None):
+        """Receive message from user"""
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         command = text_data_json['command']
@@ -99,6 +100,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
     async def leave_room(self):
+        """Leave current room"""
         if self.room_group_name is not None:
             await self.channel_layer.group_send(
                 self.room_group_name,
