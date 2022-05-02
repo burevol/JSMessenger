@@ -50,6 +50,12 @@ let inputUsername = document.getElementById('username-input');
 let acceptLoginButton = document.getElementById('accept-login-button');
 
 class ChatAPI {
+    /**
+     * @constructor
+     * @param {string} serverAddress - Адрес сервера
+     * @param {string} login - Логин
+     * @param {string }password - Пароль
+     */
     constructor(serverAddress, login, password) {
         this.serverAddress = serverAddress;
         this.login = login;
@@ -62,17 +68,32 @@ class ChatAPI {
         this.doLogin()
     }
 
+
+    /**
+     * Устанавливает новый адрес сервера и перезапускает авторизацию
+     *
+     * @param {string} serverAddress
+     */
     changeServerAddress(serverAddress) {
         this.serverAddress = serverAddress;
         this.doLogin();
     }
 
+    /**
+     * Изменяет текущие логин и пароль и перезапускает авторизацию
+     *
+     * @param {string} login
+     * @param {string} password
+     */
     changeUsernamePass(login, password) {
         this.login = login;
         this.password = password;
         this.doLogin();
     }
 
+    /**
+     * Получает токен из DRF, переподключает channels и обновляет аватар
+     */
     doLogin() {
         fetch(`http://${serverAddress.value}/chat/api/auth-token/`, {
             method: 'POST',
@@ -85,7 +106,7 @@ class ChatAPI {
             })
         }).then(response => {
             return response.json();
-        }).then(data => {
+        }).then((data) => {
             // Получить данные профиля
             this.userToken = data.token;
             console.log('Logged in. Got the token.');
@@ -112,6 +133,9 @@ class ChatAPI {
         });
     }
 
+    /**
+     * Заполняет имя пользователя
+     */
     getUsername() {
         fetch(`http://${this.serverAddress}/chat/api/profiles/${this.profileId}/`, {
             method: 'GET',
@@ -130,6 +154,11 @@ class ChatAPI {
         });
     }
 
+    /**
+     * Устанавливает новое имя пользователя
+     *
+     * @param {string} newUsername - Новое имя пользователя
+     */
     updateUsername(newUsername) {
         fetch(`http://${this.serverAddress}/chat/api/users/${this.userId}/`, {
             method: 'PATCH',
@@ -150,6 +179,11 @@ class ChatAPI {
         });
     }
 
+    /**
+     * Добавляет группу с заданным именем
+     *
+     * @param {string} groupName - Имя группы
+     */
     addGroup(groupName) {
         if (groupName !== "") {
             fetch(`http://${this.serverAddress}/chat/api/rooms/`, {
@@ -165,6 +199,12 @@ class ChatAPI {
         }
     }
 
+    /**
+     * Изменить имя группы
+     *
+     * @param {string} groupId - Идентификатор обновляемой группы
+     * @param {string }groupName - Новое имя группы
+     */
     editGroup(groupId, groupName) {
         fetch(`http://${this.serverAddress}/chat/api/rooms/${groupId}/`, {
             method: 'PUT',
@@ -178,6 +218,11 @@ class ChatAPI {
         });
     }
 
+    /**
+     * Удалить группу с указанным идентификатором
+     *
+     * @param {string} groupId - Идентификатор удаляемой группы
+     */
     deleteGroup(groupId) {
         fetch(`http://${this.serverAddress}/chat/api/rooms/${groupId}`, {
             method: 'DELETE',
@@ -190,6 +235,11 @@ class ChatAPI {
         });
     }
 
+    /**
+     * Отправляет файл аватара на сервер и обновляет его в интерфейсе
+     *
+     * @param {File} file - Файл аватара
+     */
     updateAvatar(file) {
         let data = new FormData();
         data.append('avatar', file);
@@ -209,6 +259,9 @@ class ChatAPI {
         });
     }
 
+    /**
+     * Обновляет аватар с сервера
+     */
     refreshAvatar() {
         fetch(`http://${this.serverAddress}/chat/api/profiles/${this.profileId}/`, {
             method: 'GET',
@@ -231,6 +284,9 @@ class ChatAPI {
         });
     }
 
+    /**
+     * Обновляет список групп
+     */
     updateGroups() {
         fetch(`http://${this.serverAddress}/chat/api/rooms/`, {
             method: 'GET',
@@ -244,6 +300,7 @@ class ChatAPI {
             })
             .then((data) => {
                 groupsWindow.innerHTML = '';
+                if (data.hasOwnProperty('detail')) { return }
                 for (let group in data) {
                     let div = document.createElement('div');
                     div.className = 'group';
@@ -321,6 +378,9 @@ class ChatAPI {
             });
     }
 
+    /**
+     * Обновляет список пользователей
+     */
     updateUsers() {
         fetch(`http://${this.serverAddress}/chat/api/profiles/`, {
             method: 'GET',
@@ -365,6 +425,9 @@ class ChatAPI {
             });
     }
 
+    /**
+     * Подключение к WebSocket
+     */
     connect() {
         this.chatSocket = new WebSocket(`ws://${this.serverAddress}/ws/chat/?token=${this.userToken}`);
 
@@ -436,6 +499,11 @@ setPanelVisible('profile');
 createHandlers();
 
 
+/**
+ * Устанавилвает видимые поля для режимов авторизации/смены имени
+ *
+ * @param {string} panel - Режим видимых полей
+ */
 function setLoginVisible(panel) {
     divInputLogin.hidden = true;
     divInputUsername.hidden = true;
@@ -455,9 +523,12 @@ function setLoginVisible(panel) {
 
 }
 
-function
-
-setPanelVisible(panel) {
+/**
+ * Устанавливает видимость контейнеров списка пользователей/списка групп/чата/настроек авторизации
+ *
+ * @param {string} panel - Видимая панель
+ */
+function setPanelVisible(panel) {
 
     groupsContainer.hidden = true;
     chatContainer.hidden = true;
@@ -483,9 +554,12 @@ setPanelVisible(panel) {
     }
 }
 
+/**
+ * Подключает обработчики событий элементов формы
+ */
 function createHandlers() {
     serverAddress.onclick = function () {
-        chatObject.changeServerAddress(serverAddress);
+        chatObject.changeServerAddress(serverAddress.value);
     }
 
     groupButton.onclick = function () {
